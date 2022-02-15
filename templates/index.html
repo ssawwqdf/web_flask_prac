@@ -17,11 +17,13 @@
             <a class="navbar-brand ps-3" href="index.html">Start Bootstrap</a>
             <!-- Sidebar Toggle-->
             <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <!-- Navbar Search-->
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+
+
+            <!-- AJAX 비동기 통신 : 검색어 입력할할 때마다 해당 업체 정보 리스트 가져와서 보여준다 -> id="search_form" 만든다 -->
+            <form id="search_form" class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
                 <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
-                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+                    <input name="search_input" id="search_input" class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                    <button id="btnNavbarSearch" class="btn btn-primary" type="button"><i class="fas fa-search"></i></button>
                 </div>
             </form>
             <!-- Navbar-->
@@ -112,7 +114,11 @@
                     <div class="container-fluid px-4">
                         <h1 class="mt-4">Dashboard</h1>
                         <ol class="breadcrumb mb-4">
-                            <li class="breadcrumb-item active">Dashboard</li>
+                            <li class="breadcrumb-item active">
+<!----------------------AJAX 비동기 통신 결과 보여주는 DIV --------------------->
+                                <div id="resdiv"></div>
+
+                            </li>
                         </ol>
                         <div class="row">
                             <div class="col-xl-3 col-md-6">
@@ -181,36 +187,29 @@
                                 <table id="datatablesSimple">
                                     <thead>
                                         <tr>
-                                            <th>Name</th>
-                                            <th>Position</th>
-                                            <th>Office</th>
-                                            <th>Age</th>
-                                            <th>Start date</th>
-                                            <th>Salary</th>
+                                            <th>DATE</th>
+                                            <th>Title</th>
+                                            <th>Img</th>
+                                            <th>Content</th>
                                         </tr>
                                     </thead>
                                     <tfoot>
                                         <tr>
-                                            <th>Name</th>
-                                            <th>Position</th>
-                                            <th>Office</th>
-                                            <th>Age</th>
-                                            <th>Start date</th>
-                                            <th>Salary</th>
+                                            <th>DATE</th>
+                                            <th>Title</th>
+                                            <th>Img</th>
+                                            <th>Content</th>
                                         </tr>
                                     </tfoot>
                                     <tbody>
-                                        {% for v in MY_LIST %}
+                                        {%  for v in MY_NEWS %}
                                         <tr>
-                                            <td>{{v}}}</td>
-                                            <td>{{MY_POINT}}}</td>
-                                            <td>Edinburgh</td>
-                                            <td>61</td>
-                                            <td>2011/04/25</td>
-                                            <td>$320,800</td>
-                                            {% endfor %}
+                                            <td>{{v[0]}}</td>
+                                            <td>{{v[1]}}</td>
+                                            <td><img width="100" src="{{v[4]}}"></td>
+                                            <td><a href="{{v[2]}}">{{v[3]}}</a></td>
                                         </tr>
-
+                                        {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
@@ -238,5 +237,68 @@
         <script src="static/assets/demo/chart-bar-demo.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" crossorigin="anonymous"></script>
         <script src="static/js/datatables-simple-demo.js"></script>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.js" ></script>
+<script>
+$( document ).ready(function() {
+    // ------------------ ajax(ajax_test.html에서 가져옴) ----------------------------
+    // ajax_test에서는 $( "#btnNavbarSearch" ).click(function() { 이런 식으로 버튼 누르면을 조건으로 줬는데 이번에는 입력창에 값 입력되면으로 쓰겠다.
+    //$(document).on('keypress', '#search_input', function() { //안됨
+    $
+      //비동기통신해라.... -> API 참고 async : 비동기통신 (기본 true)
+        $.ajax({  url: "/com_search_ajax",                          // dict 문법이네
+                  type : "post",                              // 대소문자 구분 없다 1.9.0. 이후에는 type 대신 method 써도 됨. 범용성 높은 type 쓰겠다
+                  data: "search_input="+$("#search_input").val(),      // search_str=삼성 이런 식으로 넘어온다
+                  success : function(flask_return_res_str) {      // 정상적으로 ajax 갔다가 돌아오면 어떻게 해줄까 function으로 준다.
+                            console.log(flask_return_res_str);     // 콘솔에 로그 찍겠다 -> 브라우저에서 f12 누르면 console 나옴
+
+                            //  ----------- string --> 객체로 변환 ----------------------
+                            flask_return_list=JSON.parse(flask_return_res_str) //jquery
+                            console.log(flask_return_list);
+
+                            console.log(flask_return_list[0][0]); list의 list일 경우
+                            flask_return_list[0][0] # 배열은 인덱스 접근은 어디든 문법 다 같다
+
+                           html_str = "<table border=1 width=100>"
+                           //  ----------- list의 list일 때 for문 돌리기(Jquery.each) ----------------------
+                           each(리스트의리스트, function(index, value))
+                           $.each(flask_return_list, function( i, v ) {
+
+                            console.log(v[0], v[1]); // 이름, 연봉
+                            html_str += "<tr><td>"+v[0]+"</td><td>"+v[1]+"<td></tr>" // 변수는 "" 밖으로 빼고 ""랑 더해서 표시
+                              // print("<tr><td>", v[0], "</td><td>") 이런 식과 비슷
+                            });
+
+
+                            html_str +="</table>"
+                            $("#resdiv").empty(); //기존에 뭐 있으면 지워달라는 얘기
+                            $("#resdiv").html(thtml_str);
+
+
+                            //  ----------- 객체 --> string으로 변환 ----------------------
+                            //flask_return_str=JSON.stringify(flask_return_list) //jquery
+                                      //파이썬: flask_return_str=json.loads(flask_return_list)
+
+                            //console.log(flask_return_str);
+
+                  },                                // 조용히 div에 결과값 띄워줘(비동기통신), 화면 번쩍 하고 스크롤맨위로 바뀌면 동기 통신
+
+                  error : function(res){alert('에러발생')},     // 에러 나면 function으로 보내야 함. 쿼리도 "" '' 구분 없다
+                                                              // 여기에 있는 res는 flask가 return한 그 값을 res라는 변수에 담겠다는 의미(파이썬에서 res를 가져오는 게 아니다)
+                  crossDomain: true,                          // 기본값이 false. false면 서로 주소 다른 것끼리 통신 못 함(127.0.0.1 <-> 구글 이런 거)
+                  // data: "userid=kim&userpw=111"            // 이건 get으로 보내겠다는 의미
+
+           });
+
+    });
+
+});
+
+<!--아이디랑 비번 submit 했으니까 이걸 나오게 해보자 -> 파라미터가 파이썬 파일에 어떻게 들어가는지 봐라-->
+
+</script>
+
     </body>
 </html>

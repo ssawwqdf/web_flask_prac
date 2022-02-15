@@ -1,0 +1,150 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<!--method는 post나 get 이런 걸 의미-->
+<form action="/form_submit_post" method="post">
+    <input type="text"      name="userid" value="기본아이디">
+    <input type="password"  name="userpw" value="기본패스워드">
+    <input type="submit"    value="로그인">
+</form>
+<br>
+
+<!--form 안에 form은 안 된다-->
+<!--파이썬이랑 연결하려면(서버랑 브라우저 통신하려면) name 필요한데 스크립트끼리 왔다갔다하려면 id 또는 class 필요(name가능하긴 한데 코드겁나길다)-->
+<!--id는 주민번호처럼 고유하다 class는 비스한 게 많다-->
+
+<!--
+<>(태그) 스크립트가 접근하기 위한 접근자 : id(고유), class(중복되어져서 비슷한 유형 여러개가 나올 수 있다.)
+아이디는 #으로 class 는 .으로 접근
+-->
+<!--input은 입력창이나 버튼 등등... type text는 text입력창 password는 입력하면 가려져서 나오고 button은 버튼임
+원래 그냥 button은 눌러도 뭐 입력값을 전송하거나 하지는 않아서 type=submit으로 줘야하는데 위에서 if 해서 비밀번호 다르게
+입력해야 전송시키려고 여기선느 그냥 button으로 했다.-->
+
+<form name="myform" id="myform">
+    <input type="text"      name="userid" id="userid" value="기본아이디">
+    <input type="password"  name="userpw" id="userpw" value="기본패스워드"><br>
+    <input type="button"    id="login_check_btn_get"  value="(로그인체크)-get">
+    <input type="button"    id="login_check_btn_post" value="(로그인체크)-post">
+    <input type="button"    id="login_check_btn_ajax" value="로그인(AJAX)-post"> <!-- AJAX도 get, post 둘 다 되는데 굳이 다 보진 않겠다 그냥 변수 어떻게 받느냐의 차이-->
+
+
+</form>
+<!--영역: div, div 안에 있는 더 작은 div는 span-->
+<div id="resdiv"></div>
+
+
+<!-- 동적으로 페이지 가져올 때 script가 위에 있으면 태그 참조 못 할 수도 있어서 맨 밑으로 옮기겠다-->
+<!--    스크립트 쓰려면 import 필요 안 꺼지는 서버 네이버나 구글 것도 있다-->
+<!--    비밀번호 입력해야 myform 부분 실행했을 때 이 내용 전송하도록 만들었다.-->
+<!--    $가 스크립트 문법인듯. jquery ready, jquery click 이런 거 검색하면 api 나오는데 여기 나오는 문법 갖다 썼다
+        //는 script에서 주석-->
+<!--스크립트 주소 입력하고 /로 닫아도 밑에서 먹나보네??? -> 일단 한 번 불러오면 이 문서 내에서는 먹는다(대신 다른 스크립트 문법 위에 있어야 됨)-->
+<!--myform을 통째로 가져오고 있다!!!!!-->
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script>
+$( document ).ready(function() {
+    // ------------------logint(체크) post ----------------------------
+    $( "#login_check_btn_post" ).click(function() {
+      //alert( "로그인(체크) 버튼클릭" );
+      if ($( "#userpw" ).val()=="기본패스워드") {
+            alert( "비번좀 바꾸세요" );
+            $("#userpw").focus();
+      } else {
+        $("#myform").attr("action","/form_submit_post")
+        $("#myform").attr("method","post")
+        $("#myform").submit();
+      }
+    });
+
+    // ------------------logint(체크) get ----------------------------
+    $( "#login_check_btn_get" ).click(function() {
+      //alert( "로그인(체크) 버튼클릭" );
+      if ($( "#userpw" ).val()=="기본패스워드") {
+        alert( "비번좀 바꾸세요" );
+        $("#userpw").focus();
+      } else {
+        $("#myform").attr("action","/form_submit_get")
+        $("#myform").attr("method","get")
+        $("#myform").submit();
+      }
+    });
+    // ------------------logint(체크) ajax ----------------------------
+    $( "#login_check_btn_ajax" ).click(function() {
+      //비동기통신해라.... -> API 참고 async : 비동기통신 (기본 true)
+        $.ajax({  url: "/form_ajax",                          // dict 문법이네
+                  type : "post",                              // 대소문자 구분 없다 1.9.0. 이후에는 type 대신 method 써도 됨. 범용성 높은 type 쓰겠다
+                  data: {"userid": "kim", "userpw":123},      // 데이터 보낼 때 가능한 형식 여러개(API 참고)
+                  success : function(flask_return_res_str) {      // 정상적으로 ajax 갔다가 돌아오면 어떻게 해줄까 function으로 준다.
+                            console.log(flask_return_res_str);     // 콘솔에 로그 찍겠다 -> 브라우저에서 f12 누르면 console 나옴
+
+
+
+                            //  ----------- string --> 객체로 변환 ----------------------
+                            flask_return_list=JSON.parse(flask_return_res_str) //jquery
+                                       //파이썬: flask_return_list=json.loads(flask_return_res_str)
+                            console.log(flask_return_list);
+                            // console.log(flask_return_list[0][0]); list의 list일 경우
+                            // flask_return_list[0][0] # 배열은 인덱스 접근은 어디든 문법 다 같다
+
+                           html_str = "<table border=1 width=100>"
+                           //  ----------- list의 list일 때 for문 돌리기(Jquery.each) ----------------------
+                           // each(리스트의리스트, function(index, value))
+                           $.each(flask_return_list, function( i, v ) {
+                            // i 0 v ['smith', 1400]
+                            // i 1 v ['allen', 4000]
+                            console.log(v[0], v[1]); // 이름, 연봉
+                            html_str += "<tr><td>"+v[0]+"</td><td>"+v[1]+"<td></tr>" // 변수는 "" 밖으로 빼고 ""랑 더해서 표시
+                              // print("<tr><td>", v[0], "</td><td>") 이런 식과 비슷
+                            });
+
+
+
+                            //  ----------- list의 dict일 때 for문 돌리기(Jquery.map) ----------------------
+                            //console.log(flask_return_list[0]["ename"]); //list의 dict일 경우
+                            // each(리스트의딕트, function(value, index)). each랑 value, index 순서 다르다
+
+                            $.map( realArray, function( v, i ) {
+                             //i 0   v {"ename": "smith", "sal": 1400}
+                            //i 1   v {"ename": "allen", "sal": 4000}
+                            console.log( v["ename"] , v["sal"]);
+                            html_str += "<tr><td>"+v["ename"]+"</td><td>"+v["sal"]+"</td></tr>"    //script
+                            });
+
+                            html_str +="</table>"
+                            $("#resdiv").empty(); //기존에 뭐 있으면 지워달라는 얘기
+                            $("#resdiv").html(thtml_str);
+
+
+
+
+
+                            //  ----------- 객체 --> string으로 변환 ----------------------
+                            //flask_return_str=JSON.stringify(flask_return_list) //jquery
+                                      //파이썬: flask_return_str=json.loads(flask_return_list)
+
+                            //console.log(flask_return_str);
+
+                  },                                // 조용히 div에 결과값 띄워줘(비동기통신), 화면 번쩍 하고 스크롤맨위로 바뀌면 동기 통신
+
+                  error : function(res){alert('에러발생')},     // 에러 나면 function으로 보내야 함. 쿼리도 "" '' 구분 없다
+                                                              // 여기에 있는 res는 flask가 return한 그 값을 res라는 변수에 담겠다는 의미(파이썬에서 res를 가져오는 게 아니다)
+                  crossDomain: true,                          // 기본값이 false. false면 서로 주소 다른 것끼리 통신 못 함(127.0.0.1 <-> 구글 이런 거)
+                  // data: "userid=kim&userpw=111"            // 이건 get으로 보내겠다는 의미
+
+           });
+
+    });
+
+});
+
+<!--아이디랑 비번 submit 했으니까 이걸 나오게 해보자 -> 파라미터가 파이썬 파일에 어떻게 들어가는지 봐라-->
+
+</script>
+
+</body>
+</html>
